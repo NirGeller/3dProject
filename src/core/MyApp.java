@@ -6,7 +6,9 @@ import java.util.Random;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.event.KeyEvent;
+import javax.swing.ImageIcon;
 
 /**
  * Document : 
@@ -18,7 +20,8 @@ public class MyApp extends BasicApp
 {
 
     //o הגדרת התכונות
-    
+    private enum Status{PLAYING, MAINMENU, LOST, WON, CONTROLS, CREDITS}
+    Status gameStatus;
     private boolean help;
     private boolean moveball; 
     private boolean End;
@@ -35,9 +38,17 @@ public class MyApp extends BasicApp
     private final GLight3d lightme;
     private final GPolygon3d [] life;
     private final Random rnd;
+    private int selected = 0;
+
+    private Image background = new ImageIcon(MyApp.class.getResource("images/universe.jpg")).getImage();
+    private Image win_bg = new ImageIcon(MyApp.class.getResource("images/win.jpg")).getImage();
+    private Image lose_bg = new ImageIcon(MyApp.class.getResource("images/lose.jpg")).getImage();
+    
+    
     //o איתחול התכונות
     public MyApp() 
     {
+        gameStatus = Status.MAINMENU;
         this.help = false;
         m = new GMatrix3d();
         cm = new GMatrix3d();
@@ -74,7 +85,7 @@ public class MyApp extends BasicApp
             outer_platform[2].setFrameColor(Color.BLUE);
         outer_platform[3] = GBody3d.createBox(CubeEdge * 50, 0, -size, size, 20, CubeEdge * 50 + size * 2); // right
             outer_platform[3].setFrameColor(Color.BLUE);
-        
+       
         //setting the player
         player = new Player(4);
         m.setZRotMatrix(Math.PI);
@@ -168,289 +179,341 @@ public class MyApp extends BasicApp
     //o עדכון מצב התכונות
     public void update(long delta) 
     {
-        if (keyboard.keyDownOnce(KeyEvent.VK_F12)) 
-        {
-            this.help = !this.help;
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_UP)) // if the user presser the arrow up key the player starts moving upwards
-        {
-            player.getPlayer().setVelocity(new GVector3d(platform.getCube(0, 0).getV(0), platform.getCube(0, 0).getV(3)));
+        //exit application
+        if (keyboard.keyDownOnce(KeyEvent.VK_ESCAPE)) {
+            exitApp();
         }
         
-        if (keyboard.keyDownOnce(KeyEvent.VK_LEFT)) // if the user presser the arrow up key the player starts moving upwards
-        {
-            player.getPlayer().setVelocity(new GVector3d(platform.getCube(0, 0).getV(1), platform.getCube(0, 0).getV(0)));
-        }   
+        //run help
+        if (keyboard.keyDownOnce(KeyEvent.VK_F12))
+            help = !help;
         
-        if (keyboard.keyDownOnce(KeyEvent.VK_DOWN)) // if the user presser the arrow up key the player starts moving upwards
-        {
-            player.getPlayer().setVelocity(new GVector3d(platform.getCube(0, 0).getV(3), platform.getCube(0, 0).getV(0)));
+        switch(gameStatus){
+            case PLAYING:{
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_UP)) // if the user presser the arrow up key the player starts moving upwards
+                {
+                    player.getPlayer().setVelocity(new GVector3d(platform.getCube(0, 0).getV(0), platform.getCube(0, 0).getV(3)));
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_LEFT)) // if the user presser the arrow up key the player starts moving upwards
+                {
+                    player.getPlayer().setVelocity(new GVector3d(platform.getCube(0, 0).getV(1), platform.getCube(0, 0).getV(0)));
+                }   
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_DOWN)) // if the user presser the arrow up key the player starts moving upwards
+                {
+                    player.getPlayer().setVelocity(new GVector3d(platform.getCube(0, 0).getV(3), platform.getCube(0, 0).getV(0)));
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_RIGHT)) // if the user presser the arrow up key the player starts moving upwards
+                {
+                    player.getPlayer().setVelocity(new GVector3d(platform.getCube(0, 0).getV(0), platform.getCube(0, 0).getV(1)));
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_NUMPAD4)) //moves the crane left   
+                {
+                    Reset[0] += 10;
+
+                    m.setTransMatrix(-10, 0, 0);
+                    ball.apply(m);
+                    platform.apply(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].apply(m);
+                          outer_platform[i].apply(m);
+                          outer_border[i].apply(m);
+                    }
+                    player.apply(m);
+
+                }
+                if (keyboard.keyDownOnce(KeyEvent.VK_NUMPAD8)) // moves the crane upwards
+                {
+                    Reset[1] += 10;
+
+                    m.setTransMatrix(0, -10, 0);
+                    ball.apply(m);
+                    platform.apply(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].apply(m);
+                          outer_platform[i].apply(m);
+                          outer_border[i].apply(m);
+
+                    }
+                    player.apply(m);
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_NUMPAD6)) // moves the crane right
+                {
+                    Reset[0] += -10;
+
+                    m.setTransMatrix(10, 0, 0);
+                    ball.apply(m);
+                    platform.apply(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].apply(m);
+                          outer_platform[i].apply(m);
+                          outer_border[i].apply(m);
+                    }
+                    player.apply(m);
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_NUMPAD2)) // moves the crane down
+                {
+                    Reset[1] += -10;
+
+                    m.setTransMatrix(0, 10, 0);
+                    ball.apply(m);
+                    platform.apply(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].apply(m);
+                          outer_platform[i].apply(m);
+                          outer_border[i].apply(m);
+                    }
+                    player.apply(m);
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_PAGE_UP)) // moves the crane away from you
+                {
+                    Reset[2] += 10;
+
+                    m.setTransMatrix(0, 0, -10);
+                    ball.apply(m);
+                    platform.apply(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].apply(m);
+                          outer_platform[i].apply(m);
+                          outer_border[i].apply(m);
+                    }
+                    player.apply(m);
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_PAGE_DOWN)) // moves the crane closer to you
+                {
+                    Reset[2] += -10;
+
+                    m.setTransMatrix(0, 0, 10);
+                    ball.apply(m);
+                    platform.apply(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].apply(m);
+                          outer_platform[i].apply(m);
+                          outer_border[i].apply(m);
+                    }
+                    player.apply(m);
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_C)) //moves the pyramid to the center of the screen
+                {
+                    GPoint3d center = platform.getPlatform().center();
+                    m.setTransMatrix(getCanvasWidth() / 2 - center.getX(), getCanvasHeight() / 2 - center.getY(), 0);
+                    ball.apply(m);
+                    platform.apply(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].apply(m);
+                          outer_platform[i].apply(m);
+                          outer_border[i].apply(m);
+                    }
+                    player.apply(m);
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_X)) // Rotates the crane around the x axis
+                {
+                    Reset[3] += -0.157079633;
+
+                    GPoint3d center = platform.getPlatform().center();
+                    m.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
+                    cm.setXRotMatrix(0.157079633);
+                    m.multiply(cm);
+                    cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
+                    m.multiply(cm);
+                    ball.turn(m);
+                    platform.turn(m);
+                    for (int i=0;i<4;i++)
+                    {
+                        inner_border[i].turn(m);
+                        outer_platform[i].turn(m);
+                        outer_border[i].turn(m);
+                    }
+                    player.turn(m);
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_Y)) // Rotates the crane around the y axis
+                {
+                    Reset[4] += -0.157079633;
+
+                    GPoint3d center = platform.getPlatform().center();
+                    m.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
+                    cm.setYRotMatrix(0.157079633);
+                    m.multiply(cm);
+                    cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
+                    m.multiply(cm);
+                    ball.turn(m);
+                    platform.turn(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].turn(m);
+                          outer_platform[i].turn(m);
+                          outer_border[i].turn(m);
+                    }
+                    player.turn(m);
+                }
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_Z)) // Rotates the crane around the z axis
+                {
+                    Reset[5] += -0.157079633;
+
+                    GPoint3d center = platform.getPlatform().center();
+                    m.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
+                    cm.setZRotMatrix(0.157079633);
+                    m.multiply(cm);
+                    cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
+                    m.multiply(cm);
+                    ball.turn(m);
+                    platform.turn(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].turn(m);
+                          outer_platform[i].turn(m);
+                          outer_border[i].turn(m);
+                    }
+                    player.turn(m);
+                }
+                
+                
+
+                if (keyboard.keyDownOnce(KeyEvent.VK_R)) // Resets the rotations and translations
+                {
+                    GPoint3d center = platform.getPlatform().center();
+
+                    //reset the Z axes rotation
+                    m.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
+                    cm.setZRotMatrix(Reset[5]);
+                    m.multiply(cm);
+                    cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
+                    m.multiply(cm);
+
+                    //reset the Y axes rotation
+                    cm.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
+                    m.multiply(cm);
+                    cm.setYRotMatrix(Reset[4]);
+                    m.multiply(cm);
+                    cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
+                    m.multiply(cm);
+
+                    //reset the X axes rotation
+                    cm.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
+                    m.multiply(cm);
+                    cm.setXRotMatrix(Reset[3]);
+                    m.multiply(cm);
+                    cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
+                    m.multiply(cm);
+
+                    //reset the translations
+                    cm.setTransMatrix(Reset[0], Reset[1], Reset[2]);
+                    m.multiply(cm);
+
+                    ball.turn(m);
+                    platform.turn(m);
+                    for (int i=0;i<4;i++)
+                    {
+                          inner_border[i].turn(m);
+                          outer_platform[i].turn(m);
+                          outer_border[i].turn(m);
+                    }
+                    player.getPlayer().turn(m);
+
+                    for (int i=0;i<6;i++)
+                    {
+                        Reset[i] = 0;
+                    }
+                }
+
+                //<< ---- - -- - - - - - - - - - - - - here start the code the moves the ball and the player >>
+
+                //moves the Player
+                setPath(player.getPlayer());
+                //cross();
+                if (player.getPlayer().intersects(outer_border[0]) || player.getPlayer().intersects(outer_border[1]) || player.getPlayer().intersects(outer_border[2]) || player.getPlayer().intersects(outer_border[3]))
+                {
+                    player.getPlayer().setVelocity(new GVector3d());
+                }
+                player.getPlayer().move();
+
+                //moves the ball and changes the balls velocity if the ball hits the inner borders or goes into the deleted aray
+                if (platform.Lose(ball))
+                {
+                    m.setTransMatrix(player.getRespawn().getX() - player.getPlayer().getV(0).getX(), player.getRespawn().getY() - player.getPlayer().getV(0).getY(), player.getRespawn().getZ() - player.getPlayer().getV(0).getZ());
+                    player.getPlayer().apply(m);
+                    player.setInside(false);
+                    player.getPlayer().setVelocity(new GVector3d());
+                    platform.Clear();
+                    player.defeated();
+                }
+                if (BallOutside())
+                {
+                    CubeRicochet(ball);
+                    return;
+                }
+                if (moveball)
+                    ball.move();
+                WallRicochet(ball); // changes the velocity of the ball if it hits the wall
+
+                //<<--------- check the outcome of the game ---------->>
+                if (player.getLife() == 0)
+                    End = true;
+                if (platform.win())
+                    End = true;
+                break;
+            }
+            case MAINMENU:{
+                
+                if (keyboard.keyDownOnce(KeyEvent.VK_UP)) {
+                    if(selected > 0) 
+                        selected--;
+                    else
+                        selected = 3;
+                }
+                
+                if (keyboard.keyDownOnce(KeyEvent.VK_DOWN)) {
+                    if(selected < 3)
+                        selected++;
+                    else
+                        selected = 0;
+                }
+                
+                if (keyboard.keyDownOnce(KeyEvent.VK_ENTER)) {
+                    switch(selected){
+                        case 0: gameStatus = Status.PLAYING;break;
+                        case 1: gameStatus = Status.CONTROLS;break;
+                        case 2: gameStatus = Status.CREDITS; break;
+                        case 3: exitApp();
+                    }
+                }
+                
+                
+                
+            }
+            
+            case CONTROLS:
+
+            case CREDITS:{
+                if (keyboard.keyDownOnce(KeyEvent.VK_BACK_SPACE)) {
+                    gameStatus = Status.MAINMENU;
+                }
+                break;
+            }
         }
         
-        if (keyboard.keyDownOnce(KeyEvent.VK_RIGHT)) // if the user presser the arrow up key the player starts moving upwards
-        {
-            player.getPlayer().setVelocity(new GVector3d(platform.getCube(0, 0).getV(0), platform.getCube(0, 0).getV(1)));
-        }
         
-        if (keyboard.keyDownOnce(KeyEvent.VK_NUMPAD4)) //moves the crane left   
-        {
-            Reset[0] += 10;
-            
-            m.setTransMatrix(-10, 0, 0);
-            ball.apply(m);
-            platform.apply(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].apply(m);
-                  outer_platform[i].apply(m);
-                  outer_border[i].apply(m);
-            }
-            player.apply(m);
-            
-        }
-        if (keyboard.keyDownOnce(KeyEvent.VK_NUMPAD8)) // moves the crane upwards
-        {
-            Reset[1] += 10;
-            
-            m.setTransMatrix(0, -10, 0);
-            ball.apply(m);
-            platform.apply(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].apply(m);
-                  outer_platform[i].apply(m);
-                  outer_border[i].apply(m);
-
-            }
-            player.apply(m);
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_NUMPAD6)) // moves the crane right
-        {
-            Reset[0] += -10;
-            
-            m.setTransMatrix(10, 0, 0);
-            ball.apply(m);
-            platform.apply(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].apply(m);
-                  outer_platform[i].apply(m);
-                  outer_border[i].apply(m);
-            }
-            player.apply(m);
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_NUMPAD2)) // moves the crane down
-        {
-            Reset[1] += -10;
-            
-            m.setTransMatrix(0, 10, 0);
-            ball.apply(m);
-            platform.apply(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].apply(m);
-                  outer_platform[i].apply(m);
-                  outer_border[i].apply(m);
-            }
-            player.apply(m);
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_PAGE_UP)) // moves the crane away from you
-        {
-            Reset[2] += 10;
-            
-            m.setTransMatrix(0, 0, -10);
-            ball.apply(m);
-            platform.apply(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].apply(m);
-                  outer_platform[i].apply(m);
-                  outer_border[i].apply(m);
-            }
-            player.apply(m);
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_PAGE_DOWN)) // moves the crane closer to you
-        {
-            Reset[2] += -10;
-            
-            m.setTransMatrix(0, 0, 10);
-            ball.apply(m);
-            platform.apply(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].apply(m);
-                  outer_platform[i].apply(m);
-                  outer_border[i].apply(m);
-            }
-            player.apply(m);
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_C)) //moves the pyramid to the center of the screen
-        {
-            GPoint3d center = platform.getPlatform().center();
-            m.setTransMatrix(getCanvasWidth() / 2 - center.getX(), getCanvasHeight() / 2 - center.getY(), 0);
-            ball.apply(m);
-            platform.apply(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].apply(m);
-                  outer_platform[i].apply(m);
-                  outer_border[i].apply(m);
-            }
-            player.apply(m);
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_X)) // Rotates the crane around the x axis
-        {
-            Reset[3] += -0.157079633;
-            
-            GPoint3d center = platform.getPlatform().center();
-            m.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
-            cm.setXRotMatrix(0.157079633);
-            m.multiply(cm);
-            cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
-            m.multiply(cm);
-            ball.turn(m);
-            platform.turn(m);
-            for (int i=0;i<4;i++)
-            {
-                inner_border[i].turn(m);
-                outer_platform[i].turn(m);
-                outer_border[i].turn(m);
-            }
-            player.turn(m);
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_Y)) // Rotates the crane around the y axis
-        {
-            Reset[4] += -0.157079633;
-            
-            GPoint3d center = platform.getPlatform().center();
-            m.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
-            cm.setYRotMatrix(0.157079633);
-            m.multiply(cm);
-            cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
-            m.multiply(cm);
-            ball.turn(m);
-            platform.turn(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].turn(m);
-                  outer_platform[i].turn(m);
-                  outer_border[i].turn(m);
-            }
-            player.turn(m);
-        }
-
-        if (keyboard.keyDownOnce(KeyEvent.VK_Z)) // Rotates the crane around the z axis
-        {
-            Reset[5] += -0.157079633;
-            
-            GPoint3d center = platform.getPlatform().center();
-            m.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
-            cm.setZRotMatrix(0.157079633);
-            m.multiply(cm);
-            cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
-            m.multiply(cm);
-            ball.turn(m);
-            platform.turn(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].turn(m);
-                  outer_platform[i].turn(m);
-                  outer_border[i].turn(m);
-            }
-            player.turn(m);
-        }
         
-        if (keyboard.keyDownOnce(KeyEvent.VK_R)) // Resets the rotations and translations
-        {
-            GPoint3d center = platform.getPlatform().center();
-           
-            //reset the Z axes rotation
-            m.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
-            cm.setZRotMatrix(Reset[5]);
-            m.multiply(cm);
-            cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
-            m.multiply(cm);
-            
-            //reset the Y axes rotation
-            cm.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
-            m.multiply(cm);
-            cm.setYRotMatrix(Reset[4]);
-            m.multiply(cm);
-            cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
-            m.multiply(cm);
-            
-            //reset the X axes rotation
-            cm.setTransMatrix(-center.getX(), -center.getY(), -center.getZ());
-            m.multiply(cm);
-            cm.setXRotMatrix(Reset[3]);
-            m.multiply(cm);
-            cm.setTransMatrix(center.getX(), center.getY(), center.getZ());
-            m.multiply(cm);
-            
-            //reset the translations
-            cm.setTransMatrix(Reset[0], Reset[1], Reset[2]);
-            m.multiply(cm);
-            
-            ball.turn(m);
-            platform.turn(m);
-            for (int i=0;i<4;i++)
-            {
-                  inner_border[i].turn(m);
-                  outer_platform[i].turn(m);
-                  outer_border[i].turn(m);
-            }
-            player.getPlayer().turn(m);
-            
-            for (int i=0;i<6;i++)
-            {
-                Reset[i] = 0;
-            }
-        }
-        
-        //<< ---- - -- - - - - - - - - - - - - here start the code the moves the ball and the player >>
-        
-        //moves the Player
-        setPath(player.getPlayer());
-        //cross();
-        if (player.getPlayer().intersects(outer_border[0]) || player.getPlayer().intersects(outer_border[1]) || player.getPlayer().intersects(outer_border[2]) || player.getPlayer().intersects(outer_border[3]))
-        {
-            player.getPlayer().setVelocity(new GVector3d());
-        }
-        player.getPlayer().move();
-        
-        //moves the ball and changes the balls velocity if the ball hits the inner borders or goes into the deleted aray
-        if (platform.Lose(ball))
-        {
-            m.setTransMatrix(player.getRespawn().getX() - player.getPlayer().getV(0).getX(), player.getRespawn().getY() - player.getPlayer().getV(0).getY(), player.getRespawn().getZ() - player.getPlayer().getV(0).getZ());
-            player.getPlayer().apply(m);
-            player.setInside(false);
-            player.getPlayer().setVelocity(new GVector3d());
-            platform.Clear();
-            player.defeated();
-        }
-        if (BallOutside())
-        {
-            CubeRicochet(ball);
-            return;
-        }
-        if (moveball)
-            ball.move();
-        WallRicochet(ball); // changes the velocity of the ball if it hits the wall
-        
-        //<<--------- check the outcome of the game ---------->>
-         if (player.getLife() == 0)
-             End = true;
-         if (platform.win())
-             End = true;
-         
+                 
     }
     
     private void setPath(GBody3d body) // adds to the path the cubes that the player crossed 
@@ -596,9 +659,11 @@ public class MyApp extends BasicApp
         }
         return false;
     }
-    //o ציור אובייקטים ויזואליים
+    
+//o ציור אובייקטים ויזואליים
     public void draw(Graphics2D g) 
     {
+        
         //because of the fact that when we have less cubes to draw everything starts moving faster we decided to draw the unecessary cubes anyway
         boolean [][] temp = platform.getFinal();
         for (int i=0;i<temp.length;i++)
@@ -610,56 +675,85 @@ public class MyApp extends BasicApp
             }
         }
         
-        //o מחיקת משטח גרפי
-        g.setColor(Color.BLACK);
+        g.setColor(new Color(0, 0, 0));
         g.fillRect(0, 0, getCanvasWidth(), getCanvasHeight());
-       
-        //draws the help
-        if (this.help) 
+
+        
+        switch(gameStatus){
+            case PLAYING:{
+                
+                g.drawImage(background, 0, 0, getCanvasWidth(), getCanvasHeight(), rootPane);
+
+                
+                //draws the help
+                if (platform.getPlatform().isFaceVisible(4, cam)) // if the platforms are face up first draw platforms
+                {
+                    drawPlatforms(g, cam, lightme); //draw all 5 platforms 
+                    if (ball.center().getZ() > player.getPlayer().center().getZ())
+                    {
+                        ball.draw(g, cam, lightme); // draw the ball
+                        player.getPlayer().draw(g, cam, lightme); // draw the player
+                    }
+                    else
+                    {
+                        player.getPlayer().draw(g, cam, lightme); // draw the player
+                        ball.draw(g, cam, lightme); // draw the ball
+                    }
+                } 
+                else // first draw balls and player the platforms 
+                {
+                    if (ball.center().getZ() > player.getPlayer().center().getZ())
+                    {
+                        ball.draw(g, cam, lightme); // draw the ball
+                        player.getPlayer().draw(g, cam, lightme); // draw the player
+                    }
+                    else
+                    {
+                        player.getPlayer().draw(g, cam, lightme); // draw the player
+                        ball.draw(g, cam, lightme); // draw the ball
+                    }
+                    drawPlatforms(g, cam, lightme);
+                }
+
+                //draw life
+                for (int i = 0; i < player.getLife(); i++)
+                {
+                    life[i].draw(g, cam);
+                }
+                
+                if(platform.win())
+                    gameStatus = Status.WON;
+                if(player.getLife() == 0)
+                    gameStatus = Status.LOST;
+                
+                break;
+            }
+            case MAINMENU:{
+                drawMenu(g);
+                break;
+            }
+            case LOST:{
+                drawLose(g);
+                break;
+            }
+            case WON:{
+                drawWin(g);
+                break;
+            }
+            case CONTROLS:{
+                drawControls(g);
+                break;
+            }
+            case CREDITS:{
+                drawCredits(g);
+                break;
+            }
+        }
+        if(help)
             drawHelp(g);
-        if (!End) 
-        {
-            if (platform.getPlatform().isFaceVisible(4, cam)) // if the platforms are face up first draw platforms
-            {
-                drawPlatforms(g, cam, lightme); //draw all 5 platforms 
-                if (ball.center().getZ() > player.getPlayer().center().getZ())
-                {
-                    ball.draw(g, cam, lightme); // draw the ball
-                    player.getPlayer().draw(g, cam, lightme); // draw the player
-                }
-                else
-                {
-                    player.getPlayer().draw(g, cam, lightme); // draw the player
-                    ball.draw(g, cam, lightme); // draw the ball
-                }
-            } 
-            else // first draw balls and player the platforms 
-            {
-                if (ball.center().getZ() > player.getPlayer().center().getZ())
-                {
-                    ball.draw(g, cam, lightme); // draw the ball
-                    player.getPlayer().draw(g, cam, lightme); // draw the player
-                }
-                else
-                {
-                    player.getPlayer().draw(g, cam, lightme); // draw the player
-                    ball.draw(g, cam, lightme); // draw the ball
-                }
-                drawPlatforms(g, cam, lightme);
-            }
 
-            //draw life
-            for (int i = 0; i < player.getLife(); i++)
-            {
-                life[i].draw(g, cam);
-            }
-
-            
-        }
-        else
-        {
-            drawEnd(g);
-        }
+        
+        
        
     }
 
@@ -713,19 +807,84 @@ public class MyApp extends BasicApp
     {
         g.setColor(Color.RED);
         g.setFont(new Font("Arial", Font.BOLD, 20));
-        g.drawString("Help   : F12", 200, 30);
+        g.drawString("cover over 70% of the platfrom in order to win", 180, getCanvasHeight() - 30);
     }
     
-    public void drawEnd(Graphics2D g)
-    {
-        g.setColor(Color.RED);
+    public void drawControls(Graphics2D g){
+        
+        
+        g.setColor(new Color(0, 0, 0));
+        g.fillRect(0, 0, getCanvasWidth(), getCanvasHeight());
+        
+        String[] text = { "the controls are:", "arrow keys -> moving the player", "x, y, z-> moving the board around the axes","c -> move platform to center","numpad 2, 6, 8, 4 -> move platform down, right, up, left" , "F12-> for help", "esc-> exit game", "press BackSpace to go back to the main menu"};
+        int[] margins = {140, 200, 230, 200, 260, 120, 110, 220};
+
+        
+        g.setColor(Color.red);
         g.setFont(new Font("Arial", Font.BOLD, 20));
-        if (player.getLife() == 0)
-            g.drawString("You Loooose!!!", 200, 100);
-        else
-            g.drawString("You Winnnnn!!!", 200, 100);
+
+        g.drawString("Dart Game: Controls! ", getCanvasWidth()/ 2 - 150, 60);
+        g.setColor(Color.cyan);
+        
+        for (int i = 0; i < text.length; i++) 
+            g.drawString(text[i],getCanvasWidth()/2 - margins[i], 108 + 50*i);
+        
+    }
+    
+    public void drawCredits(Graphics2D g){
+        
+        
+        g.setColor(new Color(0, 0, 0));
+        g.fillRect(0, 0, getCanvasWidth(), getCanvasHeight());
+        
+        g.setColor(Color.red);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+        
+        g.drawString("Dart Game: Credits! ", getCanvasWidth()/ 2 - 150, 60);
+        g.setColor(Color.cyan);
+        g.drawString("nir geller - programmer ", getCanvasWidth()/ 2 - 160, 200);
+        g.drawString("lavy labimovitch - mentor ", getCanvasWidth()/ 2 - 175, 290);
+        g.drawString("press BackSpace to go back to the main menu", getCanvasWidth()/ 2 - 250, 500);
+   
+    }
+    
+    public void drawLose(Graphics2D g)
+    {
+        g.drawImage(lose_bg, 0, 0, getCanvasWidth(), getCanvasHeight(), rootPane);
+        
+    }
+    
+    public void drawWin(Graphics2D g) {
+        
+        g.drawImage(win_bg, 0, 0, getCanvasWidth(), getCanvasHeight(), rootPane);
+
     }
 
+    public void drawMenu(Graphics2D g) {
+
+        String[] text = { "Start the game!", "Controls!", "Credits", "Exit the game!"};
+
+        int[] margins = {100, 75, 67, 100};
+
+        g.setColor(Color.red);
+        g.setFont(new Font("Arial", Font.BOLD, 20));
+
+        g.drawString("Dart Game: the beginning! ", getCanvasWidth()/ 2 - 150, 60);
+        g.setColor(Color.cyan);
+        
+        for (int i = 0; i < 4; i++) {
+            if(selected%4 == i){
+                g.setColor(Color.blue);
+            }
+            g.draw3DRect(getCanvasWidth()/2 - 160, 110 + 60*i, 270, 40, false);
+            g.drawString(text[i],getCanvasWidth()/2 - margins[i], 138 + 60*i);
+            
+            g.setColor(Color.cyan);
+
+        }
+    }
+
+    
     public static void main(String[] args)
     {
         MyApp app = new MyApp();

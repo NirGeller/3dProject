@@ -16,8 +16,7 @@ public class CubesCollection
     boolean Draw; // checks if the cubes that are true in Area should be deleted or the cubes that are false
     List <int []> path; // holds all the cubes that the player when over
     
-    CubesCollection(double cubeEdge, int numRows, int numCols, double h, Color fill, Color frame)
-    {
+    CubesCollection(double cubeEdge, int numRows, int numCols, double h, Color fill, Color frame) {
         //define variables
         count = 0;
         GMatrix3d m = new GMatrix3d();
@@ -87,7 +86,7 @@ public class CubesCollection
        
     }
     
-    public void FindArea(GBody3d ball) // checks if the ball is on of the cubes inside Area or not
+    private void FindArea(GBody3d ball) // checks if the ball is on of the cubes inside Area or not
     {
         for (int i=0;i<Area.length; i++)
         {
